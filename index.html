@@ -25,15 +25,16 @@
   </form>
   <div id="result" class="msg"></div>
 
+  <button id="fetch-btn" style="margin-top:2em;">查詢所有資料</button>
   <div class="log">
-    <div class="log-title">最近 5 筆送出紀錄：</div>
+    <div class="log-title">查詢結果：</div>
     <ul id="log-list" class="log-list"></ul>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://wjyglwmdymjuzgmubhzl.supabase.co";
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqeWdsd21keW1qdXpnbXViaHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwNzg5NTMsImV4cCI6MjA2NjY1NDk1M30.SnQamHhHD8s4VWqoW7DE6fqkBPLn4knM0ohSZYNV5vE';
-    const supabase = createClient(SUPABASE_URL, process.env.SUPABASE_KEY);
+    const supabaseUrl = 'https://wjyglwmdymjuzgmubhzl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqeWdsd21keW1qdXpnbXViaHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwNzg5NTMsImV4cCI6MjA2NjY1NDk1M30.SnQamHhHD8s4VWqoW7DE6fqkBPLn4knM0ohSZYNV5vE';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     function recommendSize(height, weight) {
       if (height < 165 || weight < 55) return "S";
@@ -45,7 +46,6 @@
       return /(clothes|fashion|shop|wear|apparel|product)/i.test(url);
     }
 
-    // 送出表單
     document.getElementById('size-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const height = Number(document.getElementById('height').value);
@@ -73,33 +73,46 @@
       } else {
         resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
         document.getElementById('size-form').reset();
-        fetchLogs();
+        fetchLogs(); // 送出後自動刷新查詢
       }
     });
 
-    // 顯示最近 5 筆紀錄
+    // 查詢所有資料（用 fetch + apikey header）
     async function fetchLogs() {
-      const { data, error } = await supabase
-        .from('userInputs')
-        .select('height,weight,url,recommendedSize')
-        .order('id', { ascending: false })
-        .limit(5);
       const logList = document.getElementById('log-list');
-      logList.innerHTML = '';
-      if (error) {
-        logList.innerHTML = '<li style="color:red;">無法取得紀錄</li>';
-        return;
+      logList.innerHTML = '<li>查詢中...</li>';
+      try {
+        const res = await fetch(
+          supabaseUrl + '/rest/v1/userInputs?select=height,weight,url,recommendedSize',
+          {
+            headers: {
+              apikey: supabaseKey,
+              Authorization: 'Bearer ' + supabaseKey
+            }
+          }
+        );
+        if (!res.ok) {
+          logList.innerHTML = `<li style="color:red;">查詢失敗：${res.status}</li>`;
+          return;
+        }
+        const data = await res.json();
+        if (!data.length) {
+          logList.innerHTML = '<li>尚無資料</li>';
+          return;
+        }
+        logList.innerHTML = '';
+        data.forEach(row => {
+          logList.innerHTML += `<li>身高:${row.height} 體重:${row.weight} 尺寸:${row.recommendedSize}<br><a href="${row.url}" target="_blank">${row.url}</a></li>`;
+        });
+      } catch (err) {
+        logList.innerHTML = `<li style="color:red;">查詢失敗：${err.message}</li>`;
       }
-      if (data.length === 0) {
-        logList.innerHTML = '<li>尚無資料</li>';
-        return;
-      }
-      data.forEach(row => {
-        logList.innerHTML += `<li>身高:${row.height} 體重:${row.weight} 尺寸:${row.recommendedSize} <br><a href="${row.url}" target="_blank">${row.url}</a></li>`;
-      });
     }
 
-    // 頁面載入時自動顯示紀錄
+    // 點擊按鈕查詢
+    document.getElementById('fetch-btn').addEventListener('click', fetchLogs);
+
+    // 頁面載入時自動查詢
     fetchLogs();
   </script>
 </body>
