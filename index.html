@@ -10,6 +10,9 @@
     input, button { display: block; margin: 1em 0; width: 100%; padding: 0.5em; }
     .msg { margin-top: 1em; color: green; }
     .error { color: red; }
+    .log { margin-top: 2em; background: #f7f7f7; padding: 1em; border-radius: 8px; }
+    .log-title { font-size: 1em; color: #333; margin-bottom: 0.5em; }
+    .log-list { font-size: 0.9em; color: #444; }
   </style>
 </head>
 <body>
@@ -22,8 +25,12 @@
   </form>
   <div id="result" class="msg"></div>
 
-  <script>
+  <div class="log">
+    <div class="log-title">最近 5 筆送出紀錄：</div>
+    <ul id="log-list" class="log-list"></ul>
+  </div>
 
+  <script>
     const supabaseUrl = 'https://wjyglwmdymjuzgmubhzl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqeWdsd21keW1qdXpnbXViaHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwNzg5NTMsImV4cCI6MjA2NjY1NDk1M30.SnQamHhHD8s4VWqoW7DE6fqkBPLn4knM0ohSZYNV5vE';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -38,6 +45,7 @@
       return /(clothes|fashion|shop|wear|apparel|product)/i.test(url);
     }
 
+    // 送出表單
     document.getElementById('size-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const height = Number(document.getElementById('height').value);
@@ -60,13 +68,39 @@
         .insert([{ height, weight, url, recommendedSize }]);
 
       if (error) {
-        resultDiv.textContent = "資料送出失敗，請稍後再試";
+        resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
         resultDiv.className = "msg error";
       } else {
         resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
         document.getElementById('size-form').reset();
+        fetchLogs();
       }
     });
+
+    // 顯示最近 5 筆紀錄
+    async function fetchLogs() {
+      const { data, error } = await supabase
+        .from('userInputs')
+        .select('height,weight,url,recommendedSize')
+        .order('id', { ascending: false })
+        .limit(5);
+      const logList = document.getElementById('log-list');
+      logList.innerHTML = '';
+      if (error) {
+        logList.innerHTML = '<li style="color:red;">無法取得紀錄</li>';
+        return;
+      }
+      if (data.length === 0) {
+        logList.innerHTML = '<li>尚無資料</li>';
+        return;
+      }
+      data.forEach(row => {
+        logList.innerHTML += `<li>身高:${row.height} 體重:${row.weight} 尺寸:${row.recommendedSize} <br><a href="${row.url}" target="_blank">${row.url}</a></li>`;
+      });
+    }
+
+    // 頁面載入時自動顯示紀錄
+    fetchLogs();
   </script>
 </body>
 </html>
