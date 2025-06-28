@@ -1,46 +1,71 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabaseUrl = 'https://wjyglwmdymjuzgmubhzl.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqeWdsd21keW1qdXpnbXViaHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwNzg5NTMsImV4cCI6MjA2NjY1NDk1M30.SnQamHhHD8s4VWqoW7DE6fqkBPLn4knM0ohSZYNV5vE';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>服裝尺寸推薦</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: 2em auto; }
+    input, button { display: block; margin: 1em 0; width: 100%; padding: 0.5em; }
+    .msg { margin-top: 1em; color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>服裝尺寸推薦</h1>
+  <form id="size-form">
+    <input type="number" id="height" placeholder="身高 (cm)" required />
+    <input type="number" id="weight" placeholder="體重 (kg)" required />
+    <input type="url" id="url" placeholder="服裝連結" required />
+    <button type="submit">送出</button>
+  </form>
+  <div id="result" class="msg"></div>
 
-  function recommendSize(height, weight) {
-    if (height < 165 || weight < 55) return "S";
-    if (height > 175 || weight > 75) return "L";
-    return "M";
-  }
+  <script>
+    const supabaseUrl = 'https://wjyglwmdymjuzgmubhzl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqeWdsd21keW1qdXpnbXViaHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwNzg5NTMsImV4cCI6MjA2NjY1NDk1M30.SnQamHhHD8s4VWqoW7DE6fqkBPLn4knM0ohSZYNV5vE';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-  function validateUrl(url) {
-    return /(clothes|fashion|shop|wear|apparel)/i.test(url);
-  }
-
-  document.getElementById('size-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const height = Number(document.getElementById('height').value);
-    const weight = Number(document.getElementById('weight').value);
-    const url = document.getElementById('url').value.trim();
-    const resultDiv = document.getElementById('result');
-    resultDiv.className = "msg";
-
-    if (!validateUrl(url)) {
-      resultDiv.textContent = "請貼上有效的服裝連結";
-      resultDiv.className = "msg error";
-      return;
+    function recommendSize(height, weight) {
+      if (height < 165 || weight < 55) return "S";
+      if (height > 175 || weight > 75) return "L";
+      return "M";
     }
 
-    const recommendedSize = recommendSize(height, weight);
-
-    // 寫入 Supabase
-    const { error } = await supabase
-      .from('userInputs')
-      .insert([{ height, weight, url, recommendedSize }]);
-
-    if (error) {
-      resultDiv.textContent = "資料送出失敗，請稍後再試";
-      resultDiv.className = "msg error";
-    } else {
-      resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
-      document.getElementById('size-form').reset();
+    function validateUrl(url) {
+      return /(clothes|fashion|shop|wear|apparel)/i.test(url);
     }
-  });
-</script>
+
+    document.getElementById('size-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const height = Number(document.getElementById('height').value);
+      const weight = Number(document.getElementById('weight').value);
+      const url = document.getElementById('url').value.trim();
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = "msg";
+
+      if (!validateUrl(url)) {
+        resultDiv.textContent = "請貼上有效的服裝連結";
+        resultDiv.className = "msg error";
+        return;
+      }
+
+      const recommendedSize = recommendSize(height, weight);
+
+      // 寫入 Supabase
+      const { error } = await supabase
+        .from('userInputs')
+        .insert([{ height, weight, url, recommendedSize }]);
+
+      if (error) {
+        resultDiv.textContent = "資料送出失敗，請稍後再試";
+        resultDiv.className = "msg error";
+      } else {
+        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
+        document.getElementById('size-form').reset();
+      }
+    });
+  </script>
+</body>
+</html>
