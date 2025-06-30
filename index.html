@@ -17,6 +17,8 @@
   <form id="size-form">
     <input type="number" id="height" placeholder="身高 (cm)" required />
     <input type="number" id="weight" placeholder="體重 (kg)" required />
+    <input type="number" id="bust" placeholder="胸圍 (cm) - 選填" />
+    <input type="number" id="waist" placeholder="腰圍 (cm) - 選填" />
     <input type="url" id="url" placeholder="服裝連結" required />
     <button type="submit">送出</button>
   </form>
@@ -24,18 +26,46 @@
 
   <script>
     const supabaseUrl = 'https://xibmzcgaqxdgnufpxbpx.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpYm16Y2dhcXhkZ251ZnB4YnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyNTQ4MDQsImV4cCI6MjA2NjgzMDgwNH0.-ts82rynqY37v5u6SE_nWOBDcn67H3LsfWrKywrP184';
+    const supabaseKey = '你的 anon key';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    function recommendSize(height, weight) {
-      if (height < 165 || weight < 55) return "S";
-      if ((height >= 165 && height <= 175) && (weight >= 55 && weight <= 75)) return "M";
-      if ((height > 175 && height <= 180) || (weight > 75 && weight <= 85)) return "L";
-      if ((height > 180 && height <= 185) || (weight > 85 && weight <= 95)) return "XL";
-      if ((height > 185 && height <= 190) || (weight > 95 && weight <= 105)) return "2XL";
-      if ((height > 190 && height <= 195) || (weight > 105 && weight <= 115)) return "3XL";
-      if (height > 195 || weight > 115) return "4XL";
-      return "M";
+    function recommendSize(height, weight, bust, waist) {
+      // 先判斷胸圍與腰圍是否有填寫且為有效數字
+      const hasBust = typeof bust === 'number' && !isNaN(bust) && bust > 0;
+      const hasWaist = typeof waist === 'number' && !isNaN(waist) && waist > 0;
+
+      if (hasBust && hasWaist) {
+        if (weight > 115 || bust > 120 || waist > 110) return "4XL";
+        if (weight > 105 || bust > 110 || waist > 100) return "3XL";
+        if (weight > 95  || bust > 100 || waist > 90)  return "2XL";
+        if (weight > 85  || bust > 95  || waist > 85)  return "XL";
+        if (weight > 75  || bust > 90  || waist > 80)  return "L";
+      } else if (hasBust) {
+        if (weight > 115 || bust > 120) return "4XL";
+        if (weight > 105 || bust > 110) return "3XL";
+        if (weight > 95  || bust > 100) return "2XL";
+        if (weight > 85  || bust > 95)  return "XL";
+        if (weight > 75  || bust > 90)  return "L";
+      } else if (hasWaist) {
+        if (weight > 115 || waist > 110) return "4XL";
+        if (weight > 105 || waist > 100) return "3XL";
+        if (weight > 95  || waist > 90)  return "2XL";
+        if (weight > 85  || waist > 85)  return "XL";
+        if (weight > 75  || waist > 80)  return "L";
+      } else {
+        // 沒填胸圍腰圍時，依體重判斷
+        if (weight > 115) return "4XL";
+        if (weight > 105) return "3XL";
+        if (weight > 95) return "2XL";
+        if (weight > 85) return "XL";
+        if (weight > 75) return "L";
+      }
+
+      // 體重較輕時依身高判斷 S 或 M
+      if (height < 165) return "S";
+      if (height <= 175) return "M";
+
+      return "M"; // 預設
     }
 
     function validateUrl(url) {
@@ -46,6 +76,10 @@
       e.preventDefault();
       const height = Number(document.getElementById('height').value);
       const weight = Number(document.getElementById('weight').value);
+      const bustVal = document.getElementById('bust').value.trim();
+      const waistVal = document.getElementById('waist').value.trim();
+      const bust = bustVal === '' ? null : Number(bustVal);
+      const waist = waistVal === '' ? null : Number(waistVal);
       const url = document.getElementById('url').value.trim();
       const resultDiv = document.getElementById('result');
       resultDiv.className = "msg";
@@ -56,11 +90,16 @@
         return;
       }
 
-      const recommendedSize = recommendSize(height, weight);
+      const recommendedSize = recommendSize(height, weight, bust, waist);
+
+      // 準備要寫入的資料物件
+      const insertData = { height, weight, url, recommendedSize };
+      if (bust !== null) insertData.bust = bust;
+      if (waist !== null) insertData.waist = waist;
 
       const { error } = await supabase
         .from('userInputs')
-        .insert([{ height, weight, url, recommendedSize }]);
+        .insert([insertData]);
 
       if (error) {
         resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
