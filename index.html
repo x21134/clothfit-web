@@ -212,7 +212,7 @@
         resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
         resultDiv.className = "msg error";
       } else {
-        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
+        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize} 僅供參考仍以實體為準`;
         document.getElementById('size-form').reset();
       }
     });
