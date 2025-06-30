@@ -46,9 +46,8 @@
       const hasBust = typeof bust === 'number' && !isNaN(bust) && bust > 0;
       const hasWaist = typeof waist === 'number' && !isNaN(waist) && waist > 0;
 
-      // 不同服裝類型使用不同邏輯
       if (clothingType === 'top') {
-        // 上身尺寸判斷（依胸圍、身高、體重）
+        // 上身尺寸判斷（胸圍、腰圍、體重、身高）
         if (gender === 'male') {
           if (hasBust && hasWaist) {
             if (weight > 115 || bust > 120 || waist > 110) return "4XL";
@@ -121,14 +120,14 @@
           return "M";
         }
       } else if (clothingType === 'bottom') {
-        // 下身尺寸判斷（依腰圍、身高、體重）
+        // 下身尺寸判斷：以腰圍為主，體重和身高為輔助
         if (gender === 'male') {
           if (hasWaist) {
-            if (waist > 110 || weight > 115) return "4XL";
-            if (waist > 100 || weight > 105) return "3XL";
-            if (waist > 90  || weight > 95)  return "2XL";
-            if (waist > 85  || weight > 85)  return "XL";
-            if (waist > 80  || weight > 75)  return "L";
+            if (waist > 110) return "4XL";
+            if (waist > 100) return "3XL";
+            if (waist > 90)  return "2XL";
+            if (waist > 85)  return "XL";
+            if (waist > 80)  return "L";
             if (waist < 75 && height < 165) return "S";
             if (waist < 80 && height <= 175) return "M";
           } else {
@@ -143,11 +142,11 @@
           return "M";
         } else if (gender === 'female') {
           if (hasWaist) {
-            if (waist > 90 || weight > 100) return "4XL";
-            if (waist > 80 || weight > 90) return "3XL";
-            if (waist > 70 || weight > 80) return "2XL";
-            if (waist > 65 || weight > 70) return "XL";
-            if (waist > 60 || weight > 60) return "L";
+            if (waist > 90) return "4XL";
+            if (waist > 80) return "3XL";
+            if (waist > 70) return "2XL";
+            if (waist > 65) return "XL";
+            if (waist > 60) return "L";
             if (waist < 60 && height < 155) return "S";
             if (waist < 65 && height <= 165) return "M";
           } else {
@@ -290,7 +289,7 @@
         resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
         resultDiv.className = "msg error";
       } else {
-        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
+        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize} 資料僅供參考仍以實體為準`;
         document.getElementById('size-form').reset();
       }
     });
