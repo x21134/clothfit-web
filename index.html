@@ -83,6 +83,7 @@
 
     async function fetchLogs() {
       const logList = document.getElementById('log-list');
+      logList.innerHTML = ''; // 先清空
       logList.innerHTML = '<li>查詢中...</li>';
       try {
         const res = await fetch(
@@ -114,7 +115,11 @@
 
     document.getElementById('fetch-btn').addEventListener('click', fetchLogs);
 
-    document.addEventListener('DOMContentLoaded', fetchLogs);
+    document.addEventListener('DOMContentLoaded', () => {
+      const logList = document.getElementById('log-list');
+      logList.innerHTML = ''; // 頁面載入時先清空
+      fetchLogs();
+    });
   </script>
 </body>
 </html>
