@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title> 尺寸推薦</title>
+  <title>MUJI 服裝尺寸推薦</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; max-width: 420px; margin: 2em auto; }
@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <h1>服裝尺寸推薦</h1>
+  <h1>MUJI 服裝尺寸推薦</h1>
   <form id="size-form">
     <select id="gender" required>
       <option value="" disabled selected>請選擇性別</option>
@@ -31,8 +31,8 @@
     <input type="number" id="height" placeholder="身高 (cm)" required />
     <input type="number" id="weight" placeholder="體重 (kg)" required />
     <input type="number" id="bust" placeholder="胸圍 (cm) - 選填" />
-    <input type="number" id="waist" placeholder="腰圍 (cm) - 選填" />
-    <input type="number" id="hip" placeholder="臀圍 (cm) - 女裝下身建議填寫" />
+    <input type="number" id="waist" placeholder="腰圍 (cm) - 女裝下身必填" />
+    <input type="number" id="hip" placeholder="臀圍 (cm) - 女裝下身選填" />
     <input type="url" id="url" placeholder="服裝連結" required />
     <button type="submit">送出</button>
   </form>
@@ -94,9 +94,10 @@
     }
 
     function findBottomSize(sizes, waist, hip) {
+      if (waist == null) return null; // 腰圍必填
       for (const item of sizes) {
         const waistInRange = inRange(waist, item.waist);
-        const hipInRange = item.hip ? inRange(hip, item.hip) : true;
+        const hipInRange = item.hip ? (hip != null ? inRange(hip, item.hip) : true) : true;
         if (waistInRange && hipInRange) {
           return item.size;
         }
@@ -107,7 +108,12 @@
     function recommendSizeMUJI(gender, clothingType, height, bust, waist, hip) {
       if (gender === "male") {
         if (clothingType === "top") {
-          if (bust == null) return "請填寫胸圍以判斷尺寸";
+          if (bust == null) {
+            if (height < 165) return "S";
+            if (height <= 175) return "M";
+            if (height <= 185) return "L";
+            return "XL";
+          }
           const size = findTopSize(maleTopSizes, height, bust);
           return size || "超出尺寸範圍";
         } else if (clothingType === "bottom") {
@@ -130,11 +136,17 @@
         }
       } else if (gender === "female") {
         if (clothingType === "top") {
-          if (bust == null) return "請填寫胸圍以判斷尺寸";
+          if (bust == null) {
+            if (height < 155) return "S";
+            if (height <= 165) return "M";
+            if (height <= 175) return "L";
+            return "XL";
+          }
           const size = findTopSize(femaleTopSizes, height, bust);
           return size || "超出尺寸範圍";
         } else if (clothingType === "bottom") {
-          if (waist == null || hip == null) return "請填寫腰圍與臀圍以判斷尺寸";
+          if (waist == null) return "請填寫腰圍以判斷尺寸";
+          // 臀圍選填
           const size = findBottomSize(femaleBottomSizes, waist, hip);
           return size || "超出尺寸範圍";
         } else if (clothingType === "fullbody") {
@@ -164,13 +176,13 @@
       const gender = document.getElementById('gender').value;
       const clothingType = document.getElementById('clothingType').value;
       const height = Number(document.getElementById('height').value);
+      const weight = Number(document.getElementById('weight').value);
       const bustVal = document.getElementById('bust').value.trim();
       const waistVal = document.getElementById('waist').value.trim();
       const hipVal = document.getElementById('hip').value.trim();
       const bust = bustVal === '' ? null : Number(bustVal);
       const waist = waistVal === '' ? null : Number(waistVal);
       const hip = hipVal === '' ? null : Number(hipVal);
-      const weight = Number(document.getElementById('weight').value);
       const url = document.getElementById('url').value.trim();
       const resultDiv = document.getElementById('result');
       resultDiv.className = "msg";
@@ -206,7 +218,7 @@
         resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
         resultDiv.className = "msg error";
       } else {
-        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize} 僅供參考仍以實體為準`;
+        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize} 僅供參考 仍以實體為準`;
         document.getElementById('size-form').reset();
       }
     });
