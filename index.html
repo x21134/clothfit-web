@@ -10,9 +10,6 @@
     input, button { display: block; margin: 1em 0; width: 100%; padding: 0.5em; }
     .msg { margin-top: 1em; color: green; }
     .error { color: red; }
-    .log { margin-top: 2em; background: #f7f7f7; padding: 1em; border-radius: 8px; }
-    .log-title { font-size: 1em; color: #333; margin-bottom: 0.5em; }
-    .log-list { font-size: 0.9em; color: #444; }
   </style>
 </head>
 <body>
@@ -24,12 +21,6 @@
     <button type="submit">送出</button>
   </form>
   <div id="result" class="msg"></div>
-
-  <button id="fetch-btn" style="margin-top:2em;">查詢所有資料</button>
-  <div class="log">
-    <div class="log-title">查詢結果：</div>
-    <ul id="log-list" class="log-list"></ul>
-  </div>
 
   <script>
     const supabaseUrl = 'https://xibmzcgaqxdgnufpxbpx.supabase.co';
@@ -77,48 +68,7 @@
       } else {
         resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
         document.getElementById('size-form').reset();
-        fetchLogs();
       }
-    });
-
-    async function fetchLogs() {
-      const logList = document.getElementById('log-list');
-      logList.innerHTML = ''; // 先清空
-      logList.innerHTML = '<li>查詢中...</li>';
-      try {
-        const res = await fetch(
-          supabaseUrl + '/rest/v1/userInputs?select=height,weight,url,recommendedSize',
-          {
-            headers: {
-              apikey: supabaseKey,
-              Authorization: 'Bearer ' + supabaseKey
-            }
-          }
-        );
-        if (!res.ok) {
-          logList.innerHTML = `<li style="color:red;">查詢失敗：${res.status}</li>`;
-          return;
-        }
-        const data = await res.json();
-        if (!data.length) {
-          logList.innerHTML = '<li>尚無資料</li>';
-          return;
-        }
-        logList.innerHTML = '';
-        data.forEach(row => {
-          logList.innerHTML += `<li>身高:${row.height} 體重:${row.weight} 尺寸:${row.recommendedSize}<br><a href="${row.url}" target="_blank">${row.url}</a></li>`;
-        });
-      } catch (err) {
-        logList.innerHTML = `<li style="color:red;">查詢失敗：${err.message}</li>`;
-      }
-    }
-
-    document.getElementById('fetch-btn').addEventListener('click', fetchLogs);
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const logList = document.getElementById('log-list');
-      logList.innerHTML = ''; // 頁面載入時先清空
-      fetchLogs();
     });
   </script>
 </body>
