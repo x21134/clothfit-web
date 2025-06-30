@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>服裝尺寸推薦</title>
+  <title>MUJI 尺寸推薦</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: sans-serif; max-width: 400px; margin: 2em auto; }
+    body { font-family: sans-serif; max-width: 420px; margin: 2em auto; }
     input, select, button { display: block; margin: 1em 0; width: 100%; padding: 0.5em; }
     .msg { margin-top: 1em; color: green; }
     .error { color: red; }
   </style>
 </head>
 <body>
-  <h1>服裝尺寸推薦</h1>
+  <h1>MUJI 服裝尺寸推薦</h1>
   <form id="size-form">
     <select id="gender" required>
       <option value="" disabled selected>請選擇性別</option>
@@ -32,6 +32,7 @@
     <input type="number" id="weight" placeholder="體重 (kg)" required />
     <input type="number" id="bust" placeholder="胸圍 (cm) - 選填" />
     <input type="number" id="waist" placeholder="腰圍 (cm) - 選填" />
+    <input type="number" id="hip" placeholder="臀圍 (cm) - 女裝下身建議填寫" />
     <input type="url" id="url" placeholder="服裝連結" required />
     <button type="submit">送出</button>
   </form>
@@ -42,201 +43,123 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpYm16Y2dhcXhkZ251ZnB4YnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyNTQ4MDQsImV4cCI6MjA2NjgzMDgwNH0.-ts82rynqY37v5u6SE_nWOBDcn67H3LsfWrKywrP184';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    function recommendSize(gender, clothingType, height, weight, bust, waist) {
-      const hasBust = typeof bust === 'number' && !isNaN(bust) && bust > 0;
-      const hasWaist = typeof waist === 'number' && !isNaN(waist) && waist > 0;
+    // MUJI 男裝上衣尺寸區間（身高、胸圍）
+    const maleTopSizes = [
+      { size: "XS", height: [155,165], bust: [76,84] },
+      { size: "S",  height: [155,165], bust: [80,88] },
+      { size: "M",  height: [165,175], bust: [88,96] },
+      { size: "L",  height: [175,185], bust: [96,104] },
+      { size: "XL", height: [175,185], bust: [104,112] },
+      { size: "XXL",height: [175,185], bust: [112,120] }
+    ];
 
-      if (clothingType === 'top') {
-        // 上身尺寸判斷（胸圍、腰圍、體重、身高）
-        if (gender === 'male') {
-          if (hasBust && hasWaist) {
-            if (weight > 115 || bust > 120 || waist > 110) return "4XL";
-            if (weight > 105 || bust > 110 || waist > 100) return "3XL";
-            if (weight > 95  || bust > 100 || waist > 90)  return "2XL";
-            if (weight > 85  || bust > 95  || waist > 85)  return "XL";
-            if (weight > 75  || bust > 90  || waist > 80)  return "L";
-            if (bust < 90 && waist < 75 && height < 165) return "S";
-            if (bust < 95 && waist < 80 && height <= 175) return "M";
-          } else if (hasBust) {
-            if (weight > 115 || bust > 120) return "4XL";
-            if (weight > 105 || bust > 110) return "3XL";
-            if (weight > 95  || bust > 100) return "2XL";
-            if (weight > 85  || bust > 95)  return "XL";
-            if (weight > 75  || bust > 90)  return "L";
-            if (bust < 90 && height < 165) return "S";
-            if (bust < 95 && height <= 175) return "M";
-          } else if (hasWaist) {
-            if (weight > 115 || waist > 110) return "4XL";
-            if (weight > 105 || waist > 100) return "3XL";
-            if (weight > 95  || waist > 90)  return "2XL";
-            if (weight > 85  || waist > 85)  return "XL";
-            if (weight > 75  || waist > 80)  return "L";
-            if (waist < 75 && height < 165) return "S";
-            if (waist < 80 && height <= 175) return "M";
-          } else {
-            if (weight > 115) return "4XL";
-            if (weight > 105) return "3XL";
-            if (weight > 95) return "2XL";
-            if (weight > 85) return "XL";
-            if (weight > 75) return "L";
-            if (height < 165) return "S";
-            if (height <= 175) return "M";
-          }
-          return "M";
-        } else if (gender === 'female') {
-          if (hasBust && hasWaist) {
-            if (weight > 100 || bust > 110 || waist > 90) return "4XL";
-            if (weight > 90  || bust > 100 || waist > 80) return "3XL";
-            if (weight > 80  || bust > 90  || waist > 70) return "2XL";
-            if (weight > 70  || bust > 85  || waist > 65) return "XL";
-            if (weight > 60  || bust > 80  || waist > 60) return "L";
-            if (bust < 80 && waist < 60 && height < 155) return "S";
-            if (bust < 85 && waist < 65 && height <= 165) return "M";
-          } else if (hasBust) {
-            if (weight > 100 || bust > 110) return "4XL";
-            if (weight > 90  || bust > 100) return "3XL";
-            if (weight > 80  || bust > 90)  return "2XL";
-            if (weight > 70  || bust > 85)  return "XL";
-            if (weight > 60  || bust > 80)  return "L";
-            if (bust < 80 && height < 155) return "S";
-            if (bust < 85 && height <= 165) return "M";
-          } else if (hasWaist) {
-            if (weight > 100 || waist > 90) return "4XL";
-            if (weight > 90  || waist > 80) return "3XL";
-            if (weight > 80  || waist > 70) return "2XL";
-            if (weight > 70  || waist > 65) return "XL";
-            if (weight > 60  || waist > 60) return "L";
-            if (waist < 60 && height < 155) return "S";
-            if (waist < 65 && height <= 165) return "M";
-          } else {
-            if (weight > 100) return "4XL";
-            if (weight > 90) return "3XL";
-            if (weight > 80) return "2XL";
-            if (weight > 70) return "XL";
-            if (weight > 60) return "L";
-            if (height < 155) return "S";
-            if (height <= 165) return "M";
-          }
-          return "M";
+    // MUJI 男裝下身尺寸區間（腰圍）
+    const maleBottomSizes = [
+      { size: "XS", waist: [64,72] },
+      { size: "S",  waist: [68,76] },
+      { size: "M",  waist: [76,84] },
+      { size: "L",  waist: [84,92] },
+      { size: "XL", waist: [92,100] },
+      { size: "XXL",waist: [100,108] }
+    ];
+
+    // MUJI 女裝上衣尺寸區間（身高、胸圍）
+    const femaleTopSizes = [
+      { size: "XS", height: [150,160], bust: [72,80] },
+      { size: "S",  height: [150,160], bust: [78,86] },
+      { size: "M",  height: [160,170], bust: [86,94] },
+      { size: "L",  height: [165,175], bust: [94,102] },
+      { size: "XL", height: [165,175], bust: [102,110] },
+      { size: "XXL",height: [165,175], bust: [110,118] }
+    ];
+
+    // MUJI 女裝下身尺寸區間（腰圍、臀圍）
+    const femaleBottomSizes = [
+      { size: "XS", waist: [58,64], hip: [82,88] },
+      { size: "S",  waist: [62,68], hip: [86,92] },
+      { size: "M",  waist: [66,72], hip: [90,96] },
+      { size: "L",  waist: [70,76], hip: [94,100] },
+      { size: "XL", waist: [74,80], hip: [98,104] },
+      { size: "XXL",waist: [78,84], hip: [102,108] }
+    ];
+
+    // 判斷是否在範圍內
+    function inRange(value, range) {
+      return value >= range[0] && value <= range[1];
+    }
+
+    // 找尺寸函式（身高胸圍判斷）
+    function findTopSize(sizes, height, bust) {
+      for (const item of sizes) {
+        if (inRange(height, item.height) && inRange(bust, item.bust)) {
+          return item.size;
         }
-      } else if (clothingType === 'bottom') {
-        // 下身尺寸判斷：以腰圍為主，體重和身高為輔助
-        if (gender === 'male') {
-          if (hasWaist) {
-            if (waist > 110) return "4XL";
-            if (waist > 100) return "3XL";
-            if (waist > 90)  return "2XL";
-            if (waist > 85)  return "XL";
-            if (waist > 80)  return "L";
-            if (waist < 75 && height < 165) return "S";
-            if (waist < 80 && height <= 175) return "M";
-          } else {
-            if (weight > 115) return "4XL";
-            if (weight > 105) return "3XL";
-            if (weight > 95) return "2XL";
-            if (weight > 85) return "XL";
-            if (weight > 75) return "L";
-            if (height < 165) return "S";
-            if (height <= 175) return "M";
-          }
-          return "M";
-        } else if (gender === 'female') {
-          if (hasWaist) {
-            if (waist > 90) return "4XL";
-            if (waist > 80) return "3XL";
-            if (waist > 70) return "2XL";
-            if (waist > 65) return "XL";
-            if (waist > 60) return "L";
-            if (waist < 60 && height < 155) return "S";
-            if (waist < 65 && height <= 165) return "M";
-          } else {
-            if (weight > 100) return "4XL";
-            if (weight > 90) return "3XL";
-            if (weight > 80) return "2XL";
-            if (weight > 70) return "XL";
-            if (weight > 60) return "L";
-            if (height < 155) return "S";
-            if (height <= 165) return "M";
-          }
-          return "M";
-        }
-      } else if (clothingType === 'fullbody') {
-        // 全身尺寸判斷（綜合胸圍、腰圍、身高、體重）
-        if (gender === 'male') {
-          if (hasBust && hasWaist) {
-            if (weight > 115 || bust > 120 || waist > 110) return "4XL";
-            if (weight > 105 || bust > 110 || waist > 100) return "3XL";
-            if (weight > 95  || bust > 100 || waist > 90)  return "2XL";
-            if (weight > 85  || bust > 95  || waist > 85)  return "XL";
-            if (weight > 75  || bust > 90  || waist > 80)  return "L";
-            if (bust < 90 && waist < 75 && height < 165) return "S";
-            if (bust < 95 && waist < 80 && height <= 175) return "M";
-          } else if (hasBust) {
-            if (weight > 115 || bust > 120) return "4XL";
-            if (weight > 105 || bust > 110) return "3XL";
-            if (weight > 95  || bust > 100) return "2XL";
-            if (weight > 85  || bust > 95)  return "XL";
-            if (weight > 75  || bust > 90)  return "L";
-            if (bust < 90 && height < 165) return "S";
-            if (bust < 95 && height <= 175) return "M";
-          } else if (hasWaist) {
-            if (weight > 115 || waist > 110) return "4XL";
-            if (weight > 105 || waist > 100) return "3XL";
-            if (weight > 95  || waist > 90)  return "2XL";
-            if (weight > 85  || waist > 85)  return "XL";
-            if (weight > 75  || waist > 80)  return "L";
-            if (waist < 75 && height < 165) return "S";
-            if (waist < 80 && height <= 175) return "M";
-          } else {
-            if (weight > 115) return "4XL";
-            if (weight > 105) return "3XL";
-            if (weight > 95) return "2XL";
-            if (weight > 85) return "XL";
-            if (weight > 75) return "L";
-            if (height < 165) return "S";
-            if (height <= 175) return "M";
-          }
-          return "M";
-        } else if (gender === 'female') {
-          if (hasBust && hasWaist) {
-            if (weight > 100 || bust > 110 || waist > 90) return "4XL";
-            if (weight > 90  || bust > 100 || waist > 80) return "3XL";
-            if (weight > 80  || bust > 90  || waist > 70) return "2XL";
-            if (weight > 70  || bust > 85  || waist > 65) return "XL";
-            if (weight > 60  || bust > 80  || waist > 60) return "L";
-            if (bust < 80 && waist < 60 && height < 155) return "S";
-            if (bust < 85 && waist < 65 && height <= 165) return "M";
-          } else if (hasBust) {
-            if (weight > 100 || bust > 110) return "4XL";
-            if (weight > 90  || bust > 100) return "3XL";
-            if (weight > 80  || bust > 90)  return "2XL";
-            if (weight > 70  || bust > 85)  return "XL";
-            if (weight > 60  || bust > 80)  return "L";
-            if (bust < 80 && height < 155) return "S";
-            if (bust < 85 && height <= 165) return "M";
-          } else if (hasWaist) {
-            if (weight > 100 || waist > 90) return "4XL";
-            if (weight > 90  || waist > 80) return "3XL";
-            if (weight > 80  || waist > 70) return "2XL";
-            if (weight > 70  || waist > 65) return "XL";
-            if (weight > 60  || waist > 60) return "L";
-            if (waist < 60 && height < 155) return "S";
-            if (waist < 65 && height <= 165) return "M";
-          } else {
-            if (weight > 100) return "4XL";
-            if (weight > 90) return "3XL";
-            if (weight > 80) return "2XL";
-            if (weight > 70) return "XL";
-            if (weight > 60) return "L";
-            if (height < 155) return "S";
-            if (height <= 165) return "M";
-          }
-          return "M";
-        }
-      } else {
-        // 未知類型，預設男性邏輯
-        return recommendSize(gender, 'top', height, weight, bust, waist);
       }
+      return null;
+    }
+
+    // 找尺寸函式（腰圍臀圍判斷）
+    function findBottomSize(sizes, waist, hip) {
+      for (const item of sizes) {
+        if (inRange(waist, item.waist) && inRange(hip, item.hip)) {
+          return item.size;
+        }
+      }
+      return null;
+    }
+
+    // 主尺寸推薦函式
+    function recommendSizeMUJI(gender, clothingType, height, bust, waist, hip) {
+      if (gender === "male") {
+        if (clothingType === "top") {
+          if (bust == null) return "請填寫胸圍以判斷尺寸";
+          const size = findTopSize(maleTopSizes, height, bust);
+          return size || "超出尺寸範圍";
+        } else if (clothingType === "bottom") {
+          if (waist == null) return "請填寫腰圍以判斷尺寸";
+          const size = findBottomSize(maleBottomSizes, waist, 0); // 男裝不考慮臀圍
+          return size || "超出尺寸範圍";
+        } else if (clothingType === "fullbody") {
+          // 簡單綜合判斷，優先胸圍判斷
+          if (bust != null && waist != null) {
+            const topSize = findTopSize(maleTopSizes, height, bust);
+            const bottomSize = findBottomSize(maleBottomSizes, waist, 0);
+            if (topSize === bottomSize) return topSize;
+            // 不同尺寸取較大者
+            const order = ["XS","S","M","L","XL","XXL"];
+            const topIndex = order.indexOf(topSize);
+            const bottomIndex = order.indexOf(bottomSize);
+            if (topIndex > bottomIndex) return topSize;
+            if (bottomIndex > topIndex) return bottomSize;
+            return topSize || bottomSize || "超出尺寸範圍";
+          }
+          return "請填寫胸圍與腰圍以判斷尺寸";
+        }
+      } else if (gender === "female") {
+        if (clothingType === "top") {
+          if (bust == null) return "請填寫胸圍以判斷尺寸";
+          const size = findTopSize(femaleTopSizes, height, bust);
+          return size || "超出尺寸範圍";
+        } else if (clothingType === "bottom") {
+          if (waist == null || hip == null) return "請填寫腰圍與臀圍以判斷尺寸";
+          const size = findBottomSize(femaleBottomSizes, waist, hip);
+          return size || "超出尺寸範圍";
+        } else if (clothingType === "fullbody") {
+          if (bust != null && waist != null && hip != null) {
+            const topSize = findTopSize(femaleTopSizes, height, bust);
+            const bottomSize = findBottomSize(femaleBottomSizes, waist, hip);
+            if (topSize === bottomSize) return topSize;
+            const order = ["XS","S","M","L","XL","XXL"];
+            const topIndex = order.indexOf(topSize);
+            const bottomIndex = order.indexOf(bottomSize);
+            if (topIndex > bottomIndex) return topSize;
+            if (bottomIndex > topIndex) return bottomSize;
+            return topSize || bottomSize || "超出尺寸範圍";
+          }
+          return "請填寫胸圍、腰圍與臀圍以判斷尺寸";
+        }
+      }
+      return "無法判斷尺寸";
     }
 
     function validateUrl(url) {
@@ -248,11 +171,12 @@
       const gender = document.getElementById('gender').value;
       const clothingType = document.getElementById('clothingType').value;
       const height = Number(document.getElementById('height').value);
-      const weight = Number(document.getElementById('weight').value);
       const bustVal = document.getElementById('bust').value.trim();
       const waistVal = document.getElementById('waist').value.trim();
+      const hipVal = document.getElementById('hip').value.trim();
       const bust = bustVal === '' ? null : Number(bustVal);
       const waist = waistVal === '' ? null : Number(waistVal);
+      const hip = hipVal === '' ? null : Number(hipVal);
       const url = document.getElementById('url').value.trim();
       const resultDiv = document.getElementById('result');
       resultDiv.className = "msg";
@@ -262,24 +186,23 @@
         resultDiv.className = "msg error";
         return;
       }
-
       if (!clothingType) {
         resultDiv.textContent = "請選擇服裝類型";
         resultDiv.className = "msg error";
         return;
       }
-
       if (!validateUrl(url)) {
         resultDiv.textContent = "請貼上有效的服裝連結";
         resultDiv.className = "msg error";
         return;
       }
 
-      const recommendedSize = recommendSize(gender, clothingType, height, weight, bust, waist);
+      const recommendedSize = recommendSizeMUJI(gender, clothingType, height, bust, waist, hip);
 
-      const insertData = { gender, clothingType, height, weight, url, recommendedSize };
+      const insertData = { gender, clothingType, height, weight: Number(document.getElementById('weight').value), url, recommendedSize };
       if (bust !== null) insertData.bust = bust;
       if (waist !== null) insertData.waist = waist;
+      if (hip !== null) insertData.hip = hip;
 
       const { error } = await supabase
         .from('userInputs')
@@ -289,7 +212,7 @@
         resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
         resultDiv.className = "msg error";
       } else {
-        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize} 資料僅供參考仍以實體為準`;
+        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
         document.getElementById('size-form').reset();
       }
     });
