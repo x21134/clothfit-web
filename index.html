@@ -38,8 +38,17 @@
 
     function recommendSize(height, weight) {
       if (height < 165 || weight < 55) return "S";
-      if (height > 175 || weight > 75) return "L";
-      return "M";
+      if ((height >= 165 && height <= 175) && (weight >= 55 && weight <= 75)) return "M";
+  
+     // L以上尺寸判斷，依體重與身高區間調整
+     if ((height > 175 && height <= 180) || (weight > 75 && weight <= 85)) return "L";
+     if ((height > 180 && height <= 185) || (weight > 85 && weight <= 95)) return "XL";
+     if ((height > 185 && height <= 190) || (weight > 95 && weight <= 105)) return "2XL";
+     if ((height > 190 && height <= 195) || (weight > 105 && weight <= 115)) return "3XL";
+     if (height > 195 || weight > 115) return "4XL";
+
+  // 若不符合以上條件，預設回傳 M
+     return "M";
     }
 
     function validateUrl(url) {
