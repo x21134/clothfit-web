@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <h1>MUJI 服裝尺寸推薦</h1>
+  <h1>服裝尺寸推薦</h1>
   <form id="size-form">
     <select id="gender" required>
       <option value="" disabled selected>請選擇性別</option>
@@ -43,7 +43,6 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpYm16Y2dhcXhkZ251ZnB4YnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyNTQ4MDQsImV4cCI6MjA2NjgzMDgwNH0.-ts82rynqY37v5u6SE_nWOBDcn67H3LsfWrKywrP184';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // MUJI 男裝上衣尺寸區間（身高、胸圍）
     const maleTopSizes = [
       { size: "XS", height: [155,165], bust: [76,84] },
       { size: "S",  height: [155,165], bust: [80,88] },
@@ -53,7 +52,6 @@
       { size: "XXL",height: [175,185], bust: [112,120] }
     ];
 
-    // MUJI 男裝下身尺寸區間（腰圍）
     const maleBottomSizes = [
       { size: "XS", waist: [64,72] },
       { size: "S",  waist: [68,76] },
@@ -63,7 +61,6 @@
       { size: "XXL",waist: [100,108] }
     ];
 
-    // MUJI 女裝上衣尺寸區間（身高、胸圍）
     const femaleTopSizes = [
       { size: "XS", height: [150,160], bust: [72,80] },
       { size: "S",  height: [150,160], bust: [78,86] },
@@ -73,7 +70,6 @@
       { size: "XXL",height: [165,175], bust: [110,118] }
     ];
 
-    // MUJI 女裝下身尺寸區間（腰圍、臀圍）
     const femaleBottomSizes = [
       { size: "XS", waist: [58,64], hip: [82,88] },
       { size: "S",  waist: [62,68], hip: [86,92] },
@@ -83,12 +79,11 @@
       { size: "XXL",waist: [78,84], hip: [102,108] }
     ];
 
-    // 判斷是否在範圍內
     function inRange(value, range) {
+      if (!range || range.length < 2) return false;
       return value >= range[0] && value <= range[1];
     }
 
-    // 找尺寸函式（身高胸圍判斷）
     function findTopSize(sizes, height, bust) {
       for (const item of sizes) {
         if (inRange(height, item.height) && inRange(bust, item.bust)) {
@@ -98,17 +93,17 @@
       return null;
     }
 
-    // 找尺寸函式（腰圍臀圍判斷）
     function findBottomSize(sizes, waist, hip) {
       for (const item of sizes) {
-        if (inRange(waist, item.waist) && inRange(hip, item.hip)) {
+        const waistInRange = inRange(waist, item.waist);
+        const hipInRange = item.hip ? inRange(hip, item.hip) : true;
+        if (waistInRange && hipInRange) {
           return item.size;
         }
       }
       return null;
     }
 
-    // 主尺寸推薦函式
     function recommendSizeMUJI(gender, clothingType, height, bust, waist, hip) {
       if (gender === "male") {
         if (clothingType === "top") {
@@ -117,15 +112,13 @@
           return size || "超出尺寸範圍";
         } else if (clothingType === "bottom") {
           if (waist == null) return "請填寫腰圍以判斷尺寸";
-          const size = findBottomSize(maleBottomSizes, waist, 0); // 男裝不考慮臀圍
+          const size = findBottomSize(maleBottomSizes, waist, 0);
           return size || "超出尺寸範圍";
         } else if (clothingType === "fullbody") {
-          // 簡單綜合判斷，優先胸圍判斷
           if (bust != null && waist != null) {
             const topSize = findTopSize(maleTopSizes, height, bust);
             const bottomSize = findBottomSize(maleBottomSizes, waist, 0);
             if (topSize === bottomSize) return topSize;
-            // 不同尺寸取較大者
             const order = ["XS","S","M","L","XL","XXL"];
             const topIndex = order.indexOf(topSize);
             const bottomIndex = order.indexOf(bottomSize);
@@ -177,6 +170,7 @@
       const bust = bustVal === '' ? null : Number(bustVal);
       const waist = waistVal === '' ? null : Number(waistVal);
       const hip = hipVal === '' ? null : Number(hipVal);
+      const weight = Number(document.getElementById('weight').value);
       const url = document.getElementById('url').value.trim();
       const resultDiv = document.getElementById('result');
       resultDiv.className = "msg";
@@ -199,7 +193,7 @@
 
       const recommendedSize = recommendSizeMUJI(gender, clothingType, height, bust, waist, hip);
 
-      const insertData = { gender, clothingType, height, weight: Number(document.getElementById('weight').value), url, recommendedSize };
+      const insertData = { gender, clothingType, height, weight, url, recommendedSize };
       if (bust !== null) insertData.bust = bust;
       if (waist !== null) insertData.waist = waist;
       if (hip !== null) insertData.hip = hip;
@@ -212,7 +206,7 @@
         resultDiv.textContent = "資料送出失敗：" + (error.message || "請稍後再試");
         resultDiv.className = "msg error";
       } else {
-        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize} 僅供參考仍以實體為準`;
+        resultDiv.textContent = `資料已送出！推薦尺寸：${recommendedSize}`;
         document.getElementById('size-form').reset();
       }
     });
